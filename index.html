@@ -55,6 +55,8 @@
   .col-name { min-width: 80px; }
   .col-real  { min-width: 90px; color: #777; font-size: 12px; }
   .no-data   { text-align: center; padding: 48px; color: #aaa; font-size: 14px; }
+  .export-btn { margin-left: auto; padding: 6px 16px; background: #2e7d32; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .export-btn:hover { background: #1b5e20; }
 </style>
 </head>
 <body>
@@ -81,6 +83,7 @@
   <button class="filter-btn type-btn"        data-type="達人"    onclick="setType(this)">達人</button>
   <button class="filter-btn type-btn"        data-type="券商"    onclick="setType(this)">券商</button>
   <span class="count" id="row-count"></span>
+  <button class="export-btn" onclick="exportCSV()">⬇ 匯出 CSV</button>
 </div>
 
 <div class="table-wrap">
@@ -186,6 +189,22 @@ function numCell(v) {
   if (isNaN(n)) return `<td class="num">${v}</td>`;
   if (n === 0)  return '<td class="num zero">0</td>';
   return `<td class="num">${n.toLocaleString()}</td>`;
+}
+
+function exportCSV() {
+  const rows = filtered();
+  if (!rows.length) { alert('沒有可匯出的資料'); return; }
+  const cols = Object.keys(RAW[0]);
+  const escape = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const header = cols.map(escape).join(',');
+  const body   = rows.map(r => cols.map(c => escape(r[c] ?? '')).join(',')).join('\n');
+  const blob   = new Blob(['\uFEFF' + header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  const q = document.getElementById('search').value.trim();
+  const fname = q ? `XQ達人成效_${q}.csv` : 'XQ達人成效_全部.csv';
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
 }
 
 function render() {
